@@ -1,40 +1,39 @@
 import socket
-import os
+import threading
 
-def main():
-    nPort = int(input("Enter port number: "))
-    print("Server: Listening on port", nPort, "...")
+# Initialize socket
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+serverIP = "127.0.0.1"
+serverPort = 12345
+server_socket.bind((serverIP, serverPort))
 
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serverSocket:
-            serverSocket.bind(('localhost', nPort))
-            serverSocket.listen(1)
-            print("Server: Waiting for a client to connect...")
+client_list = {}  # Dictionary for client details
 
-            serverEndpoint, clientAddress = serverSocket.accept()
-            print("Server: New client connected:", clientAddress)
+def handle_client():
+    while True:
+        data, addr = server_socket.recvfrom(1024)
+        message = data.decode()
 
-            # Receiving a message from the client
-            client_message = serverEndpoint.recv(4096).decode('utf-8')
-            print(client_message)
+        if message.startswith("/join"):
+            client_port = message.split()[1]
+            client_list[addr] = {"port": client_port, "handle": "Anonymous"}
+            print(f"Client from {addr} joined on port {client_port}.")
 
-            # Sending file details and content
-            file_size = os.path.getsize("Download.txt")
-            serverEndpoint.sendall((str(file_size) + '\n').encode('utf-8'))
-            serverEndpoint.sendall("Server: Hello World!\n".encode('utf-8'))
+        elif message.startswith("/leave"):
+            if addr in client_list:
+                client_details = client_list[addr]
+                print(f"Client {client_details['handle']} ({addr}) has left.")
+                del client_list[addr]
 
-            with open("Download.txt", 'rb') as fileInputStream:
-                buffer = fileInputStream.read(4096)
-                while buffer:
-                    serverEndpoint.sendall(buffer)
-                    buffer = fileInputStream.read(4096)
-            
-            print("Server: File sent!")
+        elif message.startswith("/register"):
+            handle = message.split()[1]
+            if any(client['handle'] == handle for client in client_list.values()):
+                server_socket.sendto("Name already taken. Please choose another.".encode(), addr)
+            else:
+                client_list[addr]['handle'] = handle
+                print(f"Client {addr} registered as {handle}.")
+                server_socket.sendto("Name registered successfully.".encode(), addr)
 
-    except Exception as e:
-        print(e)
-    finally:
-        print("Server: Connection is terminated.")
-
-if __name__ == "__main__":
-    main()
+# Start client handling thread
+client_thread = threading.Thread(target=handle_client)
+client_thread.start()

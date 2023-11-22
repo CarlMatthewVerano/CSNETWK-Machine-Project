@@ -2,41 +2,62 @@ import socket
 import threading
 
 # Initialize socket
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serverIP = "127.0.0.1"
 serverPort = 12345
 server_socket.bind((serverIP, serverPort))
+server_socket.listen()
 
-client_list = {}
+client_list = []
 client_list_address = []
 
-def handle_client():
+def handle_client(client_socket, addr):
     while True:
-        data, addr = server_socket.recvfrom(1024)
+        name = ''
+        data = client_socket.recv(1024)
         message = data.decode()
 
         if message.startswith("/join"):
-            client_port = message.split()[1]
-            client_list[addr] = {"port": client_port, "handle": "Anonymous"}
-            print(f"Client from {addr} joined on port {client_port}.")
-
+            # client_list_address[addr] = {"socket": client_socket}
+            client_list_address.append({"address": addr})
+            print(f"Client from {addr} joined.")
         elif message.startswith("/leave"):
-            if addr in client_list:
-                client_details = client_list[addr]
-                print(f"Client {client_details['handle']} ({addr}) has left.")
-                del client_list[addr]
+            port_index = client_list_address.index({"address": addr})
+            print(port_index)
+
+            handle_index = client_list.index({"handle": name})
+            print(handle_index)
+
+            print(f"Client {client_list[port_index]} has left.")
+            del client_list[port_index]
+            del client_list_address[handle_index]
+            break
 
         elif message.startswith("/register"):
-            if len(message.split()) == 2:
-                name = message.split()[1]
-                if not any(client['handle'] == name for client in client_list.values()):
-                    client_list[addr]["handle"] = name
-                    server_socket.sendto(f"\nWelcome {name}!\n".encode('utf-8'), addr)
-                else:
-                    server_socket.sendto(f"\nError: Registration failed. Handle or alias already exists.\n".encode('utf-8'), addr)
+            name = message.split()[1]
+            if not any(d['handle'] == name for d in client_list):
+                print("Not here")
+                client_socket.sendall(f"\nWelcome {name}!\n".encode('utf-8'))
+                client_list.append({"handle": name})
             else:
-                server_socket.sendto(f"\nError: Command parameters do not match or is not allowed.\n".encode('utf-8'), addr)
-
-# Start client handling thread
-client_thread = threading.Thread(target=handle_client)
-client_thread.start()
+                print("Here")
+                client_socket.sendall(f"\nError: Registration failed. Handle or alias already exists.\n".encode('utf-8'))
+            # if (name != client[1] for client in client_list):
+            #     print("testing")
+            #     print(name)
+            #     print(client_list)
+            #     print(type(client_list))
+            #     client_list.append({"handle": name})
+            #     # print(client_list)
+            #     client_socket.send(f"\nWelcome {name}!\n".encode('utf-8'))
+            #     print(type(client_list[0]))
+            #     print(client_list[0]['handle'])
+            #     print(client_list)
+            # else:
+            #     print("dasdasda")
+            #     client_socket.send(f"\nError: Registration failed. Handle or alias already exists.\n".encode('utf-8'))
+    client_socket.close()
+    
+while True:
+    client_socket, addr = server_socket.accept()
+    threading.Thread(target=handle_client, args=(client_socket, addr)).start()

@@ -49,17 +49,17 @@ while True:
 
                 if serverIP != "127.0.0.1" or serverPort != "12345":
                     print(
-                        "Error: Connection to the Message Board Server has failed! Please check IP Address and Port Number.")
+                        "Error: Connection to the Server has failed! Please check IP Address and Port Number.")
                 else:
                     client_socket.bind((clientIP, clientPort))
                     bufferSize = 1024
-                    print("\nConnection to the Message Board Server is successful!")
+                    print("\nConnection to the Server is successful!")
                     client_socket.sendto(f"/join {clientPort}".encode('utf-8'), (serverIP, int(serverPort)))
                     user_joined = True
             else:
                 print("Error: Command parameters do not match or is not allowed.")
         else:
-            print("Error: Failed to connect to Message Board Server. You are already connected.")
+            print("Error: Failed to connect to Server. You are already connected.")
         
     elif (user_input.startswith("/register")):
         if (user_joined == False):
@@ -71,17 +71,10 @@ while True:
                 if (user_joined == True):
                     if len(user_input.split()) == 2:
                         name = user_input.split()[1]
-                        client_socket.sendto(f"/register {name}".encode('utf-8'), (serverIP, int(serverPort)))
-                        response, _ = client_socket.recvfrom(1024)
-                        response = response.decode()
-                        if response == "Name already taken. Please choose another.":
-                            print(response)
-                            break
-                        elif response == "Name registered successfully.":
-                            user_registered = True
-                            print(response)
+                        client_socket.sendto(f"/register: {name}".encode('utf-8'), (serverIP, int(serverPort)))
+                        user_registered = True
                     else:
-                        print("Error: Failed to register handle. Don't add spaces to your handle.")
+                        print("Error: Failed to register handle.")
 
     elif(user_input.startswith("/?")):
         print("----- USER COMMANDS -----")

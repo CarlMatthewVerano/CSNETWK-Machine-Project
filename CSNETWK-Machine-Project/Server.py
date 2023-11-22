@@ -7,7 +7,8 @@ serverIP = "127.0.0.1"
 serverPort = 12345
 server_socket.bind((serverIP, serverPort))
 
-client_list = {}  # Dictionary for client details
+client_list = {}
+client_list_address = []
 
 def handle_client():
     while True:
@@ -26,13 +27,15 @@ def handle_client():
                 del client_list[addr]
 
         elif message.startswith("/register"):
-            handle = message.split()[1]
-            if any(client['handle'] == handle for client in client_list.values()):
-                server_socket.sendto("Name already taken. Please choose another.".encode(), addr)
+            if len(message.split()) == 2:
+                name = message.split()[1]
+                if not any(client['handle'] == name for client in client_list.values()):
+                    client_list[addr]["handle"] = name
+                    server_socket.sendto(f"\nWelcome {name}!\n".encode('utf-8'), addr)
+                else:
+                    server_socket.sendto(f"\nError: Registration failed. Handle or alias already exists.\n".encode('utf-8'), addr)
             else:
-                client_list[addr]['handle'] = handle
-                print(f"Client {addr} registered as {handle}.")
-                server_socket.sendto("Name registered successfully.".encode(), addr)
+                server_socket.sendto(f"\nError: Command parameters do not match or is not allowed.\n".encode('utf-8'), addr)
 
 # Start client handling thread
 client_thread = threading.Thread(target=handle_client)

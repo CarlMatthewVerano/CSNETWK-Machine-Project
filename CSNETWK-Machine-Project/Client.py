@@ -25,7 +25,16 @@ user_joined = False
 while True:
     user_input = input()
 
-    if (user_input == "/leave"):
+    if (user_input == "/?"):
+        print("[1] /join <server_ip_add> <port>\t - Connect to the server application\n")
+        print("[2] /leave\t\t\t\t - Disconnect from the server application\n")
+        print("[3] /register <handle>\t\t\t - Register a unique handle or alias\n")
+        print("[4] /store <filename>\t\t\t - Send file to server\n")
+        print("[5] /dir <server_ip_add> <port>\t\t - Request directory file list from a server\n")
+        print("[6] /get <filename> <port>\t\t - Fetch a file from a server\n")
+        print("[7] /?\t\t\t\t\t - Request command help to output all Input Syntax commands for references\n")
+
+    elif (user_input == "/leave"):
         if (user_joined == False):
             print("\nError: Disconnection failed. Please connect to the server first.")
         else:

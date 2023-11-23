@@ -19,6 +19,20 @@ server_directory = f"./Server/SerDir"
 os.makedirs(server_directory, exist_ok=True)
 print(f"Directory for Server created.")
 
+def send_file(client_socket, filename):
+    file_path = os.path.join(server_directory, filename)
+
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as file:
+            data = file.read(8192000)
+            # while data:
+            client_socket.sendall(data)
+                # data = file.read(1024)
+            # client_socket.sendall(f"\nFILE SENT!\n".encode('utf-8'))
+    else:
+        client_socket.send("File not found.".encode('utf-8'))
+
+
 def handle_client(client_socket, addr):
     while True:
         name = ''
@@ -74,6 +88,10 @@ def handle_client(client_socket, addr):
             # else:
             #     print("dasdasda")
             #     client_socket.send(f"\nError: Registration failed. Handle or alias already exists.\n".encode('utf-8'))
+        elif message.startswith("/get"):
+            filename = message.split()[1]
+            send_file(client_socket, filename)
+            
     client_socket.close()
     
 while True:

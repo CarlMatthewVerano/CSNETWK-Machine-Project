@@ -1,5 +1,8 @@
 import socket
 import threading
+import os
+
+global name
 
 # Initialize socket
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -11,6 +14,11 @@ server_socket.listen()
 client_list = []
 client_list_address = []
 
+print("Welcome to the serber")
+server_directory = f"./Server/SerDir"
+os.makedirs(server_directory, exist_ok=True)
+print(f"Directory for Server created.")
+
 def handle_client(client_socket, addr):
     while True:
         name = ''
@@ -21,16 +29,26 @@ def handle_client(client_socket, addr):
             # client_list_address[addr] = {"socket": client_socket}
             client_list_address.append({"address": addr})
             print(f"Client from {addr} joined.")
+        
         elif message.startswith("/leave"):
+
+            print("NAME:", name)
+            print("ADDR:", addr)
+            print("CLIENT_LIST_ADDR:", client_list_address)
             port_index = client_list_address.index({"address": addr})
-            print(port_index)
+            print("PORT INDEX:", port_index)
+            print(client_list)
 
-            handle_index = client_list.index({"handle": name})
-            print(handle_index)
+            indeces = next((i for i, item in enumerate(client_list_address) if item["address"] == addr), None)
+            
+            # handle_index = client_list.index({"handle": name})
+            # print("HANDLE INDEX", handle_index)
 
-            print(f"Client {client_list[port_index]} has left.")
-            del client_list[port_index]
-            del client_list_address[handle_index]
+            print(f"Client {client_list[indeces]} has left.")
+            client_directory = f"./Client/{client_list[indeces]['handle']}"
+            os.rmdir(client_directory)
+            del client_list[indeces]
+            del client_list_address[indeces]
             break
 
         elif message.startswith("/register"):

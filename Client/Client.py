@@ -79,6 +79,10 @@ while True:
                     name = user_input.split()[1]
                     client_socket.send(f"/register {name}".encode('utf-8'))
                     user_registered = True
+                    # os.mkdir("../Client/{name}")
+                    client_directory = f"./{name}"
+                    os.makedirs(client_directory, exist_ok=True)
+                    print(f"Directory for {name} created.")
                 else:
                     print("Error: Failed to register handle.")
 

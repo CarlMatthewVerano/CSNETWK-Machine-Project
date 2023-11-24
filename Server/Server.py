@@ -71,6 +71,7 @@ def handle_client(client_socket, addr):
                 print("Not here")
                 client_socket.sendall(f"\nWelcome {name}!\n".encode('utf-8'))
                 client_list.append({"handle": name})
+
             else:
                 print("Here")
                 client_socket.sendall(f"\nError: Registration failed. Handle or alias already exists.\n".encode('utf-8'))

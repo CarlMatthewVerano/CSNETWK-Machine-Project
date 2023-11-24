@@ -17,6 +17,7 @@ def receive():
     while True:
         try:
             message = client_socket.recv(1024)
+            print(message.decode())
             return message.decode()
         except:
             pass

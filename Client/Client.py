@@ -115,6 +115,9 @@ def work():
             if not os.path.exists(server_directory):
                 print(f"Directory '{server_directory}' does not exist.")
                 continue
+
+            # Scan the directory and get an iterator of os.DirEntry objects
+            # corresponding to entries in it using os.scandir() method
             try:
                 with os.scandir(server_directory) as entries:
                     print(f"Files and Directories in '{server_directory}':")

@@ -24,7 +24,7 @@ def send_file(client_socket, filename):
 
     if os.path.exists(file_path):
         with open(file_path, 'rb') as file:
-            data = file.read(8192000)
+            data = file.read(819200)
             # while data:
             client_socket.sendall(data)
                 # data = file.read(1024)

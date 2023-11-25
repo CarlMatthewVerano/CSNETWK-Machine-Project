@@ -106,6 +106,23 @@ def work():
                     print("Register first before you're able to get files from the server.")
             else:
                 print("Error: Please connect to the server first.")
+        
+        elif (user_input == "/dir"):
+            # This is the path you want to scan
+            server_directory = f"../Server/SerDir"
+            
+            # Check if the directory exists
+            if not os.path.exists(server_directory):
+                print(f"Directory '{server_directory}' does not exist.")
+                continue
+            try:
+                with os.scandir(server_directory) as entries:
+                    print(f"Files and Directories in '{server_directory}':")
+                    for entry in entries:
+                        print(entry.name)
+            except Exception as e:
+                print(f"Error accessing the directory: {e}")
+
 
         elif(user_input.startswith("/?")):
             print("----- USER COMMANDS -----")

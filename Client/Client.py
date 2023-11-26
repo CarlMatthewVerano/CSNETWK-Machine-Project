@@ -3,6 +3,7 @@ import os
 import threading
 import random
 from time import sleep
+from datetime import datetime
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -27,6 +28,31 @@ def receive_file(client_socket, filename, name):
     file = open(file_path, 'wb')
     data = client_socket.recv(8192000)
     file.write(data)
+
+def send_file_to_server(client_socket, filename, name):
+    file_path = os.path.join(f"./{name}", filename)
+
+    if os.path.exists(file_path):
+        try:
+            client_socket.sendall(f"/store {filename}".encode('utf-8'))
+
+            with open(file_path, 'rb') as file:
+                print(f'File uploading: {file_path}')
+                file_content = file.read()
+                client_socket.sendall(len(file_content).to_bytes(4, byteorder='big'))  
+
+                while file_content:
+                    client_socket.sendall(file_content)
+                    file_content = file.read(8192)
+
+                print(f"{name}<{get_current_time()}>: Uploaded {filename}")
+        except Exception as e:
+            print(f"Error sending file data: {e}")
+    else:
+        print("Error: File not found.")
+
+def get_current_time():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def work():
     global name
@@ -107,6 +133,16 @@ def work():
             else:
                 print("Error: Please connect to the server first.")
         
+        elif user_input.startswith("/store"):
+            if user_joined:
+                if user_registered:
+                    filename = user_input.split()[1]
+                    send_file_to_server(client_socket, filename, name)
+                else:
+                    print("Register first before you're able to store files to the server.")
+            else:
+                print("Error: Please connect to the server first.")
+
         elif (user_input == "/dir"):
             # This is the path you want to scan
             server_directory = f"../Server/SerDir"

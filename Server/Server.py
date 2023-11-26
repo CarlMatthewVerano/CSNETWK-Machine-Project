@@ -1,6 +1,7 @@
 import socket
 import threading
 import os
+from datetime import datetime
 
 global name
 
@@ -32,12 +33,41 @@ def send_file(client_socket, filename):
     else:
         client_socket.send("File not found.".encode('utf-8'))
 
+def receive_file_from_client(client_socket, filename):
+    file_path = os.path.join(server_directory, filename)
+    print(f"Receiving file to: {file_path}")
+
+    try:
+        with open(file_path, 'wb') as file:
+            print('File incoming...')
+            
+            file_size_bytes = client_socket.recv(4)
+            file_size = int.from_bytes(file_size_bytes, byteorder='big')
+            print(f"Expecting {file_size} bytes of data")
+
+            received_bytes = 0
+            while received_bytes < file_size:
+                data = client_socket.recv(8192)
+                if not data:
+                    break
+                file.write(data)
+                received_bytes += len(data)
+                print(f"Received {received_bytes} bytes of data")
+
+        print(f"File received and stored: {filename}")
+    except Exception as e:
+        print(f"Error receiving file: {e}")
+
+def get_current_time():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def handle_client(client_socket, addr):
     while True:
         name = ''
         data = client_socket.recv(1024)
+        print(f"Received data: {data}")
         message = data.decode()
+        print(f"Decoded message: {message}")
 
         if message.startswith("/join"):
             # client_list_address[addr] = {"socket": client_socket}
@@ -89,6 +119,13 @@ def handle_client(client_socket, addr):
             # else:
             #     print("dasdasda")
             #     client_socket.send(f"\nError: Registration failed. Handle or alias already exists.\n".encode('utf-8'))
+        
+        elif message.startswith("/store"):
+                _, filename = message.split()
+                print(f"Received file data: {data}")
+                receive_file_from_client(client_socket, filename)
+                print(f"{name}<{get_current_time()}>: Stored {filename}")
+        
         elif message.startswith("/get"):
             filename = message.split()[1]
             send_file(client_socket, filename)

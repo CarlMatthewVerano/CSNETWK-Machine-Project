@@ -26,7 +26,7 @@ def receive():
 def receive_file(client_socket, filename, name):
     file_path = os.path.join(f"./{name}", filename)
     file = open(file_path, 'wb')
-    data = client_socket.recv(8192000)
+    data = client_socket.recv(819200)
     file.write(data)
 
 def send_file_to_server(client_socket, filename, name):
@@ -171,6 +171,6 @@ def work():
         else:
             print("Command not found.")
 
-        sleep(0.75)
+        sleep(0.5)
 
 work()

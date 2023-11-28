@@ -60,6 +60,7 @@ def work():
     user_joined = False
     while True:
         user_input = input()
+        commandLen = user_input.split()
 
         if (user_input == "/?"):
             print("[1] /join <server_ip_add> <port>\t - Connect to the server application\n")
@@ -74,6 +75,7 @@ def work():
             if (user_joined == False):
                 print("\nError: Disconnection failed. Please connect to the server first.")
             else:
+                user_joined == False
                 client_socket.send(f"/leave".encode('utf-8'))
                 print("\nConnection closed. Thank you!")
                 client_socket.close()
@@ -81,7 +83,10 @@ def work():
 
         elif (user_input.startswith("/join")):
 
-            if (user_joined == False):
+            if len(commandLen) <= 1:
+                print("Error: Command parameters do not match or is not allowed.")
+
+            elif (user_joined == False):
 
                 client_details = user_input.split()
 
@@ -105,8 +110,10 @@ def work():
                 print("Error: Failed to connect to Server. You are already connected.")
             
         elif (user_input.startswith("/register")):
-            
-            if (user_joined == False):
+
+            if len(commandLen) <= 1:
+                print("Error: Command parameters do not match or is not allowed.")
+            elif (user_joined == False):
                 print("Error: Failed to register handle. Please connect to the server first.")
             else:
                 if (user_registered == True):
@@ -144,23 +151,30 @@ def work():
                 print("Error: Please connect to the server first.")
 
         elif (user_input == "/dir"):
-            # This is the path you want to scan
-            server_directory = f"../Server/SerDir"
-            
-            # Check if the directory exists
-            if not os.path.exists(server_directory):
-                print(f"Directory '{server_directory}' does not exist.")
-                continue
 
-            # Scan the directory and get an iterator of os.DirEntry objects
-            # corresponding to entries in it using os.scandir() method
-            try:
-                with os.scandir(server_directory) as entries:
-                    print(f"Files and Directories in '{server_directory}':")
-                    for entry in entries:
-                        print(entry.name)
-            except Exception as e:
-                print(f"Error accessing the directory: {e}")
+            if user_joined:
+                if user_registered:
+                    # This is the path you want to scan
+                    server_directory = f"../Server/SerDir"
+                    
+                    # Check if the directory exists
+                    if not os.path.exists(server_directory):
+                        print(f"Directory '{server_directory}' does not exist.")
+                        continue
+
+                    # Scan the directory and get an iterator of os.DirEntry objects
+                    # corresponding to entries in it using os.scandir() method
+                    try:
+                        with os.scandir(server_directory) as entries:
+                            print(f"Files and Directories in '{server_directory}':")
+                            for entry in entries:
+                                print(entry.name)
+                    except Exception as e:
+                        print(f"Error accessing the directory: {e}")
+                else:
+                    print("Register first before you're able to see the files in the server.")
+            else:
+                print("Error: Please connect to the server first.")
 
 
         elif(user_input.startswith("/?")):

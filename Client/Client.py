@@ -24,10 +24,14 @@ def receive():
             pass
 
 def receive_file(client_socket, filename, name):
-    file_path = os.path.join(f"./{name}", filename)
-    file = open(file_path, 'wb')
     data = client_socket.recv(819200)
-    file.write(data)
+    print("Data received for /get (CLIENT): ", data.decode())
+    if data.decode() == "File not found.":
+        print("File not found")
+    else:
+        file_path = os.path.join(f"./{name}", filename)
+        file = open(file_path, 'wb')
+        file.write(data)
 
 def send_file_to_server(client_socket, filename, name):
     file_path = os.path.join(f"./{name}", filename)

@@ -87,13 +87,16 @@ def handle_client(client_socket, addr):
             
             # handle_index = client_list.index({"handle": name})
             # print("HANDLE INDEX", handle_index)
-
-            print(f"Client {client_list[indeces]} has left.")
-            client_directory = f"./Client/{client_list[indeces]['handle']}"
-            os.rmdir(client_directory)
-            del client_list[indeces]
-            del client_list_address[indeces]
-            break
+            try:
+                print(f"Client {client_list[indeces]} has left.")
+                client_directory = f"./Client/{client_list[indeces]['handle']}"
+                os.rmdir(client_directory)
+                del client_list[indeces]
+            except:
+                print("Client has left")
+            
+            finally:
+                del client_list_address[indeces]
 
         elif message.startswith("/register"):
             name = message.split()[1]

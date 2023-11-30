@@ -98,6 +98,7 @@ def handle_client(client_socket, addr):
             
             finally:
                 del client_list_address[indeces]
+            break
 
         elif message.startswith("/register"):
             name = message.split()[1]
@@ -133,6 +134,29 @@ def handle_client(client_socket, addr):
         elif message.startswith("/get"):
             filename = message.split()[1]
             send_file(client_socket, filename)
+
+        # Inside handle_client function
+        elif message.startswith("/dir"):
+            server_directory = f"./Server/SerDir"
+            
+            # Check if the directory exists
+            if not os.path.exists(server_directory):
+                print(f"Directory '{server_directory}' does not exist.")
+                continue
+
+            # Scan the directory and get an iterator of os.DirEntry objects
+            # corresponding to entries in it using os.scandir() method
+            try:
+                with os.scandir(server_directory) as entries:
+                    print(f"Files and Directories in '{server_directory}':")
+                    directory_listing = ''
+                    for entry in entries:
+                        directory_listing += (f"{entry.name}\n")
+
+                    client_socket.sendall(directory_listing.encode('utf-8'))
+            except Exception as e:
+                print(f"Error accessing the directory: {e}".encode('utf-8'))
+
             
     client_socket.close()
     

@@ -15,23 +15,31 @@ name = ""
 
 
 def receive():
-    while True:
+    global server_connected
+    while server_connected:
         try:
             message = client_socket.recv(1024)
+            if not message:  # Server has closed the connection
+                print("Server has been disconnected.")
+                server_connected = False  # Set the flag to indicate server disconnection
+                break
             print(message.decode())
             return message.decode()
-        except:
-            pass
+        except Exception as e:
+            print("An error occurred:", e)
+            server_connected = False
+            break
 
 def receive_file(client_socket, filename, name):
     data = client_socket.recv(819200)
-    print("Data received for /get (CLIENT): ", data.decode())
-    if data.decode() == "File not found.":
+    # Check if the first part of the data is the 'File not found.' message
+    if data[:15].decode(errors='ignore') == "File not found.":
         print("File not found")
     else:
         file_path = os.path.join(f"./{name}", filename)
-        file = open(file_path, 'wb')
-        file.write(data)
+        with open(file_path, 'wb') as file:
+            file.write(data)
+
 
 def send_file_to_server(client_socket, filename, name):
     file_path = os.path.join(f"./{name}", filename)
@@ -55,15 +63,28 @@ def send_file_to_server(client_socket, filename, name):
     else:
         print("Error: File not found.")
 
+def receive_dir():
+    try:
+        directory_data = client_socket.recv(1024)
+        directory_listing = directory_data.decode()
+        print("Directory listing from server:")
+        print(directory_listing)
+    except Exception as e:
+        print("Error receiving directory listing:", e)
+
 def get_current_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def work():
-    global name
+    global name, server_connected
+    server_connected = True
     user_registered = False
     user_joined = False
-    while True:
+    while server_connected:
         user_input = input()
+        if not server_connected:
+            print("Server is not connected. Exiting.")
+            break
         commandLen = user_input.split()
 
         if (user_input == "/?"):
@@ -155,31 +176,14 @@ def work():
                 print("Error: Please connect to the server first.")
 
         elif (user_input == "/dir"):
-
-            if user_joined:
+            if server_connected:
                 if user_registered:
-                    # This is the path you want to scan
-                    server_directory = f"../Server/SerDir"
-                    
-                    # Check if the directory exists
-                    if not os.path.exists(server_directory):
-                        print(f"Directory '{server_directory}' does not exist.")
-                        continue
-
-                    # Scan the directory and get an iterator of os.DirEntry objects
-                    # corresponding to entries in it using os.scandir() method
-                    try:
-                        with os.scandir(server_directory) as entries:
-                            print(f"Files and Directories in '{server_directory}':")
-                            for entry in entries:
-                                print(entry.name)
-                    except Exception as e:
-                        print(f"Error accessing the directory: {e}")
+                    client_socket.send("/dir".encode('utf-8'))
+                    receive_dir()
                 else:
                     print("Register first before you're able to see the files in the server.")
             else:
-                print("Error: Please connect to the server first.")
-
+                print("Error: Server is not connected.")
 
         elif(user_input.startswith("/?")):
             print("----- USER COMMANDS -----")

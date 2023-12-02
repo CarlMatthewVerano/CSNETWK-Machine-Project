@@ -19,12 +19,14 @@ def receive():
     while server_connected:
         try:
             message = client_socket.recv(1024)
-            if not message:  # Server has closed the connection
-                print("Server has been disconnected.")
-                server_connected = False  # Set the flag to indicate server disconnection
-                break
+            if not message:
+                raise ConnectionError("Server has been disconnected.")
             print(message.decode())
             return message.decode()
+        except ConnectionError as e:
+            print(e)
+            server_connected = False
+            break
         except Exception as e:
             print("An error occurred:", e)
             server_connected = False
@@ -100,11 +102,18 @@ def work():
             if (user_joined == False):
                 print("\nError: Disconnection failed. Please connect to the server first.")
             else:
-                user_joined == False
-                client_socket.send(f"/leave".encode('utf-8'))
-                print("\nConnection closed. Thank you!")
-                client_socket.close()
-                break
+                try:
+                    user_joined = False
+                    user_registered = False
+                    client_socket.send(f"/leave".encode('utf-8'))
+                    print("\nConnection closed. Thank you!")
+                    client_socket.close()
+                except ConnectionResetError:
+                    print("Connection lost with the server.")
+                    server_connected = False
+                except Exception as e:
+                    print(f"An error occurred: {e}")
+                    server_connected = False
 
         elif (user_input.startswith("/join")):
 
@@ -116,26 +125,32 @@ def work():
                 client_details = user_input.split()
 
                 if len(client_details) == 3:
-                    serverIP, serverPort = client_details[1], client_details[2]
+                    try:
+                        serverIP, serverPort = client_details[1], client_details[2]
 
-                    if serverIP != "127.0.0.1" or serverPort != "12345":
-                        print(
-                            "Error: Connection to the Server has failed! Please check IP Address and Port Number.")
-                    else:
-                        client_socket.connect((serverIP, int(serverPort)))
-                        print("\nConnection to the Server is successful!")
-                        client_socket.send(f"/join {serverPort}".encode('utf-8'))
-                        user_joined = True
+                        if serverIP != "127.0.0.1" or serverPort != "12345":
+                            print(
+                                "Error: Connection to the Server has failed! Please check IP Address and Port Number.")
+                        else:
+                            client_socket.connect((serverIP, int(serverPort)))
+                            print("\nConnection to the Server is successful!")
+                            client_socket.send(f"/join {serverPort}".encode('utf-8'))
+                            user_joined = True
 
-                        receive_thread = threading.Thread(target=receive)
-                        receive_thread.start()
+                            receive_thread = threading.Thread(target=receive)
+                            receive_thread.start()
+                    except ConnectionResetError:
+                        print("Connection lost with the server.")
+                        server_connected = False
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
+                        server_connected = False
                 else:
                     print("Error: Command parameters do not match or is not allowed.")
             else:
                 print("Error: Failed to connect to Server. You are already connected.")
             
         elif (user_input.startswith("/register")):
-
             if len(commandLen) <= 1:
                 print("Error: Command parameters do not match or is not allowed.")
             elif (user_joined == False):
@@ -144,22 +159,36 @@ def work():
                 if (user_registered == True):
                     print("Error: You are already registered!")
                 else:
-                    if len(user_input.split()) == 2:
-                        name = user_input.split()[1]
-                        client_socket.send(f"/register {name}".encode('utf-8'))
-                        user_registered = True
-                        # os.mkdir("../Client/{name}")
-                        client_directory = f"./{name}"
-                        os.makedirs(client_directory, exist_ok=True)
-                        print(f"Directory for {name} created.")
-                    else:
-                        print("Error: Failed to register handle.")
+                    try:
+                        if len(user_input.split()) == 2:
+                            name = user_input.split()[1]
+                            client_socket.send(f"/register {name}".encode('utf-8'))
+                            user_registered = True
+                            # os.mkdir("../Client/{name}")
+                            client_directory = f"./{name}"
+                            os.makedirs(client_directory, exist_ok=True)
+                            print(f"Directory for {name} created.")
+                        else:
+                            print("Error: Failed to register handle.")
+                    except ConnectionResetError:
+                        print("Connection lost with the server.")
+                        server_connected = False
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
+                        server_connected = False
         elif user_input.startswith("/get"):
             if user_joined:
                 if user_registered:
-                    filename = user_input.split()[1]
-                    client_socket.send(f"/get {filename}".encode('utf-8'))
-                    receive_file(client_socket, filename, name)
+                    try:
+                        filename = user_input.split()[1]
+                        client_socket.send(f"/get {filename}".encode('utf-8'))
+                        receive_file(client_socket, filename, name)
+                    except ConnectionResetError:
+                        print("Connection lost with the server.")
+                        server_connected = False
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
+                        server_connected = False
                 else:
                     print("Register first before you're able to get files from the server.")
             else:
@@ -168,28 +197,36 @@ def work():
         elif user_input.startswith("/store"):
             if user_joined:
                 if user_registered:
-                    filename = user_input.split()[1]
-                    send_file_to_server(client_socket, filename, name)
+                    try:
+                        filename = user_input.split()[1]
+                        send_file_to_server(client_socket, filename, name)
+                    except ConnectionResetError:
+                        print("Connection lost with the server.")
+                        server_connected = False
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
+                        server_connected = False
                 else:
                     print("Register first before you're able to store files to the server.")
             else:
                 print("Error: Please connect to the server first.")
 
-        elif (user_input == "/dir"):
-            if server_connected:
+        elif user_input.startswith("/dir"):
+            if user_joined:
                 if user_registered:
-                    client_socket.send("/dir".encode('utf-8'))
-                    receive_dir()
+                    try:
+                        client_socket.send("/dir".encode('utf-8'))
+                        receive_dir()
+                    except ConnectionResetError:
+                        print("Connection lost with the server.")
+                        server_connected = False
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
+                        server_connected = False
                 else:
-                    print("Register first before you're able to see the files in the server.")
+                    print("Register first before you're able to view dir of server.")
             else:
-                print("Error: Server is not connected.")
-
-        elif(user_input.startswith("/?")):
-            print("----- USER COMMANDS -----")
-            print("LEAVE CHATROOM: /leave")
-            print("REGISTER HANDLE: /register <handle>")
-
+                print("Error: Please connect to the server first.")
         else:
             print("Command not found.")
 

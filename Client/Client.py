@@ -78,10 +78,12 @@ def get_current_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def work():
-    global name, server_connected
+    global name, server_connected, client_socket
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_connected = True
     user_registered = False
     user_joined = False
+    sleep(0.05)
     while server_connected:
         user_input = input()
         if not server_connected:
@@ -108,6 +110,7 @@ def work():
                     client_socket.send(f"/leave".encode('utf-8'))
                     print("\nConnection closed. Thank you!")
                     client_socket.close()
+                    work()
                 except ConnectionResetError:
                     print("Connection lost with the server.")
                     server_connected = False

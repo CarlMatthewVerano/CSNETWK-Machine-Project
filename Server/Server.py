@@ -27,10 +27,7 @@ def send_file(client_socket, filename):
     if os.path.exists(file_path):
         with open(file_path, 'rb') as file:
             data = file.read(819200)
-            # while data:
             client_socket.sendall(data)
-                # data = file.read(1024)
-            # client_socket.sendall(f"\nFILE SENT!\n".encode('utf-8'))
     else:
         client_socket.send("File not found.".encode('utf-8'))
 
@@ -66,12 +63,10 @@ def handle_client(client_socket, addr):
     while True:
         name = ''
         data = client_socket.recv(1024)
-        print(f"Received data: {data}")
         message = data.decode()
-        print(f"Decoded message: {message}")
+        print(f"Decoded message from client: {message}")
 
         if message.startswith("/join"):
-            # client_list_address[addr] = {"socket": client_socket}
             client_list_address.append({"address": addr})
             print(f"Client from {addr} joined.")
         
@@ -86,8 +81,6 @@ def handle_client(client_socket, addr):
 
             indeces = next((i for i, item in enumerate(client_list_address) if item["address"] == addr), None)
             
-            # handle_index = client_list.index({"handle": name})
-            # print("HANDLE INDEX", handle_index)
             try:
                 print(f"Client {client_list[indeces]} has left.")
                 client_directory = f"./Client/{client_list[indeces]['handle']}"
@@ -103,27 +96,12 @@ def handle_client(client_socket, addr):
         elif message.startswith("/register"):
             name = message.split()[1]
             if not any(d['handle'] == name for d in client_list):
-                print("Not here")
                 client_socket.sendall(f"\nWelcome {name}!\n".encode('utf-8'))
                 client_list.append({"handle": name})
 
             else:
                 print("Here")
                 client_socket.sendall(f"\nError: Registration failed. Handle or alias already exists.\n".encode('utf-8'))
-            # if (name != client[1] for client in client_list):
-            #     print("testing")
-            #     print(name)
-            #     print(client_list)
-            #     print(type(client_list))
-            #     client_list.append({"handle": name})
-            #     # print(client_list)
-            #     client_socket.send(f"\nWelcome {name}!\n".encode('utf-8'))
-            #     print(type(client_list[0]))
-            #     print(client_list[0]['handle'])
-            #     print(client_list)
-            # else:
-            #     print("dasdasda")
-            #     client_socket.send(f"\nError: Registration failed. Handle or alias already exists.\n".encode('utf-8'))
         
         elif message.startswith("/store"):
                 _, filename = message.split()
@@ -135,17 +113,13 @@ def handle_client(client_socket, addr):
             filename = message.split()[1]
             send_file(client_socket, filename)
 
-        # Inside handle_client function
         elif message.startswith("/dir"):
             server_directory = f"./Server/SerDir"
             
-            # Check if the directory exists
             if not os.path.exists(server_directory):
                 print(f"Directory '{server_directory}' does not exist.")
                 continue
 
-            # Scan the directory and get an iterator of os.DirEntry objects
-            # corresponding to entries in it using os.scandir() method
             try:
                 with os.scandir(server_directory) as entries:
                     print(f"Files and Directories in '{server_directory}':")
@@ -157,7 +131,7 @@ def handle_client(client_socket, addr):
             except Exception as e:
                 print(f"Error accessing the directory: {e}".encode('utf-8'))
 
-            
+    print("closeeeee")
     client_socket.close()
     
 while True:

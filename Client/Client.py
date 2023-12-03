@@ -110,6 +110,7 @@ def work():
                     client_socket.send(f"/leave".encode('utf-8'))
                     print("\nConnection closed. Thank you!")
                     client_socket.close()
+                    sleep(0.05)
                     work()
                 except ConnectionResetError:
                     print("Connection lost with the server.")
@@ -233,6 +234,6 @@ def work():
         else:
             print("Command not found.")
 
-        sleep(0.5)
+        sleep(0.05)
 
 work()

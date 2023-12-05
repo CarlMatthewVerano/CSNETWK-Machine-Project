@@ -1,3 +1,8 @@
+# Fernandez, Matthew
+# Gamboa, Mikkel
+# Verano, Carl
+# Section: S11
+
 import socket
 import threading
 import os

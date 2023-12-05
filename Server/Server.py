@@ -16,7 +16,8 @@ server_socket.listen()
 client_list = []
 client_list_address = []
 
-print("Welcome to the serber")
+print("File Exchange Server has started!")
+print(f"Server Application is running on IP: {serverIP} and Port: {serverPort}")
 server_directory = f"./Server/SerDir"
 os.makedirs(server_directory, exist_ok=True)
 print(f"Directory for Server created.")
@@ -28,6 +29,7 @@ def send_file(client_socket, filename):
         with open(file_path, 'rb') as file:
             data = file.read(819200)
             client_socket.sendall(data)
+            
     else:
         client_socket.send("File not found.".encode('utf-8'))
 
@@ -71,13 +73,7 @@ def handle_client(client_socket, addr):
             print(f"Client from {addr} joined.")
         
         elif message.startswith("/leave"):
-
-            print("NAME:", name)
-            print("ADDR:", addr)
-            print("CLIENT_LIST_ADDR:", client_list_address)
-            port_index = client_list_address.index({"address": addr})
-            print("PORT INDEX:", port_index)
-            print(client_list)
+            print(f"Client on {addr} left")
 
             indeces = next((i for i, item in enumerate(client_list_address) if item["address"] == addr), None)
             
@@ -100,7 +96,6 @@ def handle_client(client_socket, addr):
                 client_list.append({"handle": name})
 
             else:
-                print("Here")
                 client_socket.sendall(f"\nError: Registration failed. Handle or alias already exists.\n".encode('utf-8'))
         
         elif message.startswith("/store"):
@@ -131,7 +126,6 @@ def handle_client(client_socket, addr):
             except Exception as e:
                 print(f"Error accessing the directory: {e}".encode('utf-8'))
 
-    print("closeeeee")
     client_socket.close()
     
 while True:

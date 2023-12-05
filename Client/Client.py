@@ -41,6 +41,8 @@ def receive_file(client_socket, filename, name):
         file_path = os.path.join(f"./{name}", filename)
         with open(file_path, 'wb') as file:
             file.write(data)
+        print("File received from Server: ", filename)
+        
 
 
 def send_file_to_server(client_socket, filename, name):
@@ -137,7 +139,7 @@ def work():
                                 "Error: Connection to the Server has failed! Please check IP Address and Port Number.")
                         else:
                             client_socket.connect((serverIP, int(serverPort)))
-                            print("\nConnection to the Server is successful!")
+                            print("\nConnection to the File Exchange Server is successful!")
                             client_socket.send(f"/join {serverPort}".encode('utf-8'))
                             user_joined = True
 
